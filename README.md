@@ -1,34 +1,18 @@
-Heart Disease Prediction & Analysis System
+# Heart Disease Tracker ❤️
 
-A Big Data Analytics project that consolidates multiple heart disease datasets using Apache Spark to predict heart disease risk and provide actionable health suggestions.
+A Big Data Analytics web application designed to predict and track heart disease indicators using Machine Learning.
 
-🔗 Live Application
+## 🚀 Live Demo
 
-Click the link below to access the interactive dashboard:
-Launch Streamlit App
+**Click here to view the app:**
+[**Launch Heart Disease Tracker**](https://starsgiri-final-bda-project--web-appsstreamlet-app1-h3udaf.streamlit.app/)
 
-📱 Scan to Open on Mobile
+---
 
-📖 Project Overview
+### 🛠️ Built With
+* **Python**
+* **Streamlit**
+* **Machine Learning Models**
 
-This system processes large-scale medical data to assist in the early detection of heart disease. It aggregates data from 5 distinct sources (Cleveland, Hungarian, Switzerland, Long Beach VA, etc.) into a unified schema for robust machine learning analysis.
-
-Key Features
-
-Data Integration: Merges 5 separate heart disease datasets using PySpark.
-
-Data Cleaning: Automated removal of duplicates and handling of null values/outliers.
-
-Risk Prediction: Uses Machine Learning to predict the presence of heart disease (Target 0 or 1).
-
-Smart Suggestions: Provides tailored lifestyle recommendations (e.g., "Consult Cardiologist" vs. "Maintain Lifestyle") based on prediction results and key vitals like Cholesterol and Resting Blood Pressure.
-
-🛠️ Technologies Used
-
-Apache Spark (PySpark): For big data processing, schema standardization, and merging datasets.
-
-Streamlit: For the web-based user interface and dashboard.
-
-Python: Core programming language.
-
-Spark MLlib: For building the predictive machine learning models.
+### 📋 Description
+This application analyzes user input parameters (such as age, chest pain type, etc.) to assess the likelihood of heart disease. It was developed as part of a Big Data Analytics project.
