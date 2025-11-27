@@ -24,9 +24,12 @@ spark = get_spark_session()
 # --- 3. Model Loading ---
 @st.cache_resource
 def load_model(_spark):
-    # NOTE: Double check if the space in "Final_BDA_Project /" is intentional.
-    # If not, remove the space before the slash.
-    model_path = "/home/giri/Desktop/Final_BDA_Project/Final_BDA_Project-/models/model1(79)/model1"
+    # Use relative path that works both locally and on Streamlit Cloud
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Navigate up one level to project root, then to models
+    model_path = os.path.join(script_dir, "..", "models", "model1(79)", "model1")
+    model_path = os.path.normpath(model_path)  # Clean up the path
     
     try:
         model = PipelineModel.load(model_path)
