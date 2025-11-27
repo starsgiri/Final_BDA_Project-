@@ -18,4 +18,6 @@ A Big Data Analytics web application designed to predict and track heart disease
 This application analyzes user input parameters (such as age, chest pain type, etc.) to assess the likelihood of heart disease. It was developed as part of a Big Data Analytics project.
 
 
-<img width="180" height="180" alt="image" src="https://github.com/user-attachments/assets/67e4fe41-1328-491b-a47b-edd2100bb1c4" />
+<div align="center">
+  <img width="180" height="180" alt="image" src="https://github.com/user-attachments/assets/67e4fe41-1328-491b-a47b-edd2100bb1c4" />
+</div>
