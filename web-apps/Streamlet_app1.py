@@ -50,7 +50,7 @@ st.markdown("""
     
     /* Headers */
     .custom-header {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+       background: linear-gradient(274deg,rgba(42, 71, 201, 1) 0%, rgba(255, 122, 33, 1) 100%);
         padding: 2rem;
         border-radius: 10px;
         color: white;
