@@ -137,7 +137,7 @@ if submit_btn and model:
                     st.write(f"pred lable value: **{pred_label:.2}**")
                     st.progress(float(probs[1]))
                     st.warning("The model suggests a high probability of heart disease indicators.")
-                if probs[1] >=60.0 and prob[1] < 80.0:
+                elif probs[1] >=60.0 and prob[1] < 80.0:
                     st.error(f" **Prediction: MODERATE RISK**")
                     st.write(f"Confidence: **{probs[1]:.2%}**")
                     st.write(f"pred lable value: **{pred_label:.2}**")
