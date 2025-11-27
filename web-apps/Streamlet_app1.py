@@ -131,13 +131,13 @@ if submit_btn and model:
                 st.metric("Calculated BMI", f"{bmi:.1f}")
                 
             with col_res2:
-                if probs >= 80.0:
+                if pred_label >= 80.0:
                     st.error(f"**Prediction: HIGH RISK**")
                     st.write(f"Confidence: **{probs[1]:.2%}**")
                     st.write(f"pred lable value: **{pred_label[1]:.2}**")
                     st.progress(float(probs[1]))
                     st.warning("The model suggests a high probability of heart disease indicators.")
-                if probs >=60.0 and probs < 80.0:
+                if pred_label >=60.0 and pred_label < 80.0:
                     st.error(f" **Prediction: MODERATE RISK**")
                     st.write(f"Confidence: **{probs[1]:.2%}**")
                     st.write(f"pred lable value: **{pred_label[1]:.2}**")
