@@ -12,12 +12,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS for Better UI/UX ---
+# --- Custom CSS for Better UI/UX with Theme Support ---
 st.markdown("""
 <style>
-    /* Main container styling */
+    /* Light mode styling */
     .main {
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    /* Dark mode styling */
+    @media (prefers-color-scheme: dark) {
+        .main {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .stForm {
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-card {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px);
+        }
     }
     
     /* Card-like containers */
@@ -26,6 +45,7 @@ st.markdown("""
         padding: 2rem;
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
     }
     
     /* Headers */
@@ -63,6 +83,7 @@ st.markdown("""
         margin: 1rem 0;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         animation: fadeIn 0.5s;
+        transition: all 0.3s ease;
     }
     
     @keyframes fadeIn {
@@ -93,6 +114,29 @@ st.markdown("""
     
     [data-testid="stSidebar"] .element-container {
         color: white;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    /* Progress bar styling */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .custom-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .result-card {
+            padding: 1rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -168,14 +212,14 @@ with st.sidebar:
     st.markdown("""
     This AI-powered system uses **Apache Spark ML** to predict heart disease risk based on:
     
-    -  **Demographics**: Age, Sex, BMI
-    -  **Medical History**: BP, Cholesterol, Diabetes
-    -  **Lifestyle Factors**: Activity, Smoking
-    -  **Health Metrics**: Physical & Mental Health
+    - 📋 **Demographics**: Age, Sex, BMI
+    - 🏥 **Medical History**: BP, Cholesterol, Diabetes
+    - 🏃 **Lifestyle Factors**: Activity, Smoking
+    - 🧠 **Health Metrics**: Physical & Mental Health
     """)
     
     st.markdown("---")
-    st.markdown("###  Model Information")
+    st.markdown("### 🎯 Model Information")
     if model:
         st.success("✅ Model Loaded Successfully")
     else:
@@ -192,6 +236,12 @@ with st.sidebar:
     
     st.markdown("---")
     st.info("💡 **Tip**: All predictions should be reviewed by healthcare professionals")
+    
+    st.markdown("---")
+    st.markdown("### ⚙️ Theme Settings")
+    st.markdown("""
+    Use the **☀️/🌙 icon** in the top-right corner to toggle between light and dark themes.
+    """)
 
 # --- 6. Main Header ---
 st.markdown("""
@@ -203,26 +253,26 @@ st.markdown("""
 
 # --- 7. User Interface ---
 with st.form("prediction_form"):
-    st.markdown("###  Patient Information")
+    st.markdown("### 📝 Patient Information")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("####  Demographics")
+        st.markdown("#### 👤 Demographics")
         age_input = st.selectbox("Age Group", options=list(age_map.keys()), index=6)
         sex_input = st.radio("Sex", ["Male", "Female"], horizontal=True)
         height_cm = st.number_input("Height (cm)", 100, 250, 175)
         weight_kg = st.number_input("Weight (kg)", 30, 200, 80)
         
     with col2:
-        st.markdown("####  Medical History")
+        st.markdown("#### 🏥 Medical History")
         bp_input = st.selectbox("High Blood Pressure?", ["No", "Yes"])
         chol_input = st.selectbox("High Cholesterol?", ["No", "Yes"])
         stroke_input = st.selectbox("History of Stroke?", ["No", "Yes"])
         diab_input = st.selectbox("Has Diabetes?", ["No", "Yes"])
         
     with col3:
-        st.markdown("####  Lifestyle & Health")
+        st.markdown("#### 🏃 Lifestyle & Health")
         walk_input = st.radio("Difficulty Walking/Climbing Stairs?", ["No", "Yes"], horizontal=True)
         smoke_input = st.radio("Smoked >100 cigarettes (lifetime)?", ["No", "Yes"], horizontal=True)
         phys_act = st.radio("Physical Activity (past 30 days)?", ["No", "Yes"], horizontal=True)
@@ -272,16 +322,16 @@ if submit_btn and model:
     status_text = st.empty()
     
     try:
-        status_text.text(" Initializing prediction...")
+        status_text.text("🔄 Initializing prediction...")
         progress_bar.progress(25)
         time.sleep(0.3)
         
-        status_text.text(" Running ML model...")
+        status_text.text("🧠 Running ML model...")
         prediction = model.transform(input_df)
         progress_bar.progress(75)
         time.sleep(0.3)
         
-        status_text.text(" Analyzing results...")
+        status_text.text("📊 Analyzing results...")
         result = prediction.select("prediction", "probability").collect()[0]
         progress_bar.progress(100)
         time.sleep(0.3)
@@ -336,7 +386,7 @@ if submit_btn and model:
             st.progress(risk_percentage / 100)
             
             # Risk factors summary
-            st.markdown("###  Key Risk Factors Identified")
+            st.markdown("### 🎯 Key Risk Factors Identified")
             risk_factors = []
             
             if input_data[0]['HighBP'] == 1:
@@ -358,7 +408,7 @@ if submit_btn and model:
                 for factor in risk_factors:
                     st.markdown(f"- {factor}")
             else:
-                st.success(" No major risk factors identified")
+                st.success("✅ No major risk factors identified")
         
         with result_col2:
             st.markdown("### 💊 Recommendations")
@@ -408,7 +458,7 @@ if submit_btn and model:
             st.json(input_data[0])
         
         # Disclaimer
-        st.warning(" **Medical Disclaimer**: This prediction is for informational purposes only and should not replace professional medical advice. Please consult with healthcare providers for proper diagnosis and treatment.")
+        st.warning("⚠️ **Medical Disclaimer**: This prediction is for informational purposes only and should not replace professional medical advice. Please consult with healthcare providers for proper diagnosis and treatment.")
         
     except Exception as e:
         st.error("❌ An error occurred during prediction.")
