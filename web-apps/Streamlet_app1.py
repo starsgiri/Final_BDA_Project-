@@ -131,16 +131,21 @@ if submit_btn and model:
                 st.metric("Calculated BMI", f"{bmi:.1f}")
                 
             with col_res2:
-                if pred_label == 1.0:
-                    st.error(f"⚠️ **Prediction: HIGH RISK**")
+                if pred_label >= 0.8:
+                    st.error(f"**Prediction: HIGH RISK**")
+                    st.write(f"Confidence: **{probs[1]:.2%}**")
+                    st.progress(float(probs[1]))
+                    st.warning("The model suggests a high probability of heart disease indicators.")
+                else if pred_label >= 0.6 && pred_label < 0.8:
+                    st.error(f" **Prediction: MODERATE RISK**")
                     st.write(f"Confidence: **{probs[1]:.2%}**")
                     st.progress(float(probs[1]))
                     st.warning("The model suggests a high probability of heart disease indicators.")
                 else:
-                    st.success(f"✅ **Prediction: LOW RISK**")
+                    st.success(f" **Prediction: LOW RISK**")
                     st.write(f"Confidence: **{probs[0]:.2%}**")
                     st.progress(float(probs[0]))
-                    st.caption("The model does not detect strong indicators of heart disease.")
+                    st.caption("Thank you......")
                     
             # Debug: Show raw input data if needed
             with st.expander("View Raw Input Data passed to Spark"):
