@@ -17,13 +17,13 @@ st.markdown("""
 <style>
     /* Light mode styling */
     .main {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(#CCCCFF, #CCCCFF, #CCCCFF );
     }
     
     /* Dark mode styling */
     @media (prefers-color-scheme: dark) {
         .main {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(#CCCCFF, #CCCCFF, #CCCCFF);
         }
         
         .stForm {
