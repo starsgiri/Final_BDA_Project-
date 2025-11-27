@@ -1,0 +1,102 @@
+from pyspark.sql import SparkSession
+from pyspark.ml import Pipeline
+import pyspark.sql.functions as F
+
+from pyspark.ml.feature import VectorAssembler, StringIndexer, StandardScaler
+from pyspark.ml.classification import GBTClassifier
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
+from pyspark.sql.functions import col, rand
+import shutil
+import os
+
+data_path = "/home/giri/Desktop/Final_BDA_Project /Data/2015.csv" 
+df = spark.read.csv(data_path, header=True, inferSchema=True)
+
+
+# 3. Data Preprocessing & Cleaning
+# Using F.when and F.col to ensure functions are defined
+
+clean_df = df.select(
+    # Target: 1 if Heart Disease, else 0
+    (F.when(F.col("_MICHD") == 1, 1).otherwise(0)).alias("label"),
+    
+    # BMI: Divide by 100
+    (F.col("_BMI5") / 100).alias("BMI"),
+    
+    # Binary Features (1=Yes, 0=No)
+    (F.when(F.col("SMOKE100") == 1, 1).otherwise(0)).alias("Smoking"),
+    (F.when(F.col("CVDSTRK3") == 1, 1).otherwise(0)).alias("Stroke"),
+    (F.when(F.col("DIABETE3") == 1, 1).otherwise(0)).alias("Diabetes"),
+    (F.when(F.col("_TOTINDA") == 1, 1).otherwise(0)).alias("PhysicalActivity"),
+    (F.when(F.col("SEX") == 1, 1).otherwise(0)).alias("Male"),
+    (F.when(F.col("_RFHYPE5") == 2, 0).otherwise(1)).alias("HighBP"),
+    
+    # Scale/Categorical
+    F.col("GENHLTH").alias("GenHealth"),
+    F.col("_AGEG5YR").alias("AgeCategory"),
+    
+    # Special Logic: 88 = 0 days, >30 = Null (Error codes)
+    (F.when(F.col("PHYSHLTH") == 88, 0)
+     .when(F.col("PHYSHLTH") > 30, None)
+     .otherwise(F.col("PHYSHLTH"))).alias("PhysHealthDays"),
+     
+    (F.when(F.col("MENTHLTH") == 88, 0)
+     .when(F.col("MENTHLTH") > 30, None)
+     .otherwise(F.col("MENTHLTH"))).alias("MentHealthDays")
+)
+
+# Drop rows with Nulls
+clean_df = clean_df.dropna()
+
+# --- OVERSAMPLING (Crucial for High Accuracy) ---
+major_df = clean_df.filter(F.col("label") == 0)
+minor_df = clean_df.filter(F.col("label") == 1)
+ratio = int(major_df.count() / minor_df.count())
+print(f"Class Imbalance Ratio: {ratio}. Oversampling minority class...")
+
+# Generate array for explode
+oversampled_minor_df = minor_df.withColumn("dummy", F.explode(F.array([F.lit(x) for x in range(ratio)]))).drop("dummy")
+combined_df = major_df.unionAll(oversampled_minor_df)
+
+# 4. Feature Assembly
+feature_cols = ["BMI", "Smoking", "Stroke", "Diabetes", "PhysicalActivity", 
+                "GenHealth", "PhysHealthDays", "MentHealthDays", "Male", "AgeCategory", "HighBP"]
+
+assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
+scaler = StandardScaler(inputCol="features", outputCol="scaledFeatures", withStd=True, withMean=True)
+gbt = GBTClassifier(labelCol="label", featuresCol="scaledFeatures", maxIter=50, seed=42)
+
+pipeline = Pipeline(stages=[assembler, scaler, gbt])
+
+# 5. Train/Test Split
+train_data, test_data = combined_df.randomSplit([0.8, 0.2], seed=42)
+
+# 6. Cross Validation for Hyperparameters
+paramGrid = ParamGridBuilder() \
+    .addGrid(gbt.maxDepth, [5, 10]) \
+    .addGrid(gbt.stepSize, [0.1]) \
+    .build()
+
+evaluator = BinaryClassificationEvaluator(labelCol="label", metricName="areaUnderROC")
+
+crossval = CrossValidator(estimator=pipeline,
+                          estimatorParamMaps=paramGrid,
+                          evaluator=evaluator,
+                          numFolds=3)
+
+print("Training Model...")
+cvModel = crossval.fit(train_data)
+
+# 7. Evaluation
+predictions = cvModel.transform(test_data)
+total = predictions.count()
+correct = predictions.filter(F.col("label") == F.col("prediction")).count()
+accuracy = correct / total * 100
+model_path = "/home/giri/Desktop/Final_BDA_Project /models/model1(79)"
+if os.path.exists(model_path):
+    shutil.rmtree(model_path)
+cvModel.bestModel.save(model_path)
+print(f"Model saved to {model_path}")
+
+

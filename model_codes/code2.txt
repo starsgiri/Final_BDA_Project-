@@ -1,0 +1,5 @@
+df1 = load_and_standardize("/home/giri/Desktop/Final_BDA_Project/Final_BDA_Project-/Data/2011.csv")
+df2 = load_and_standardize("/home/giri/Desktop/Final_BDA_Project/Final_BDA_Project-/Data/2012.csv")
+df3 = load_and_standardize("/home/giri/Desktop/Final_BDA_Project/Final_BDA_Project-/Data/2013.csv")
+df4 = load_and_standardize("/home/giri/Desktop/Final_BDA_Project/Final_BDA_Project-/Data/2014.csv")
+df5 = load_and_standardize("/home/giri/Desktop/Final_BDA_Project/Final_BDA_Project-/Data/2015.csv")

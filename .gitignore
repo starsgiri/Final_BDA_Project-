@@ -1,0 +1,8 @@
+Data/
+web-apps/venv/
+venv/
+__pycache__/
+*.pyc
+model_codes/Heart_Disease_Model/
+web-apps/venv/
+web-apps/ui_env/
