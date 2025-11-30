@@ -3,6 +3,7 @@ from pyspark.sql import SparkSession
 from pyspark.ml import PipelineModel
 import os
 import time
+import google.generativeai as genai
 
 # --- 1. Page Configuration ---
 st.set_page_config(
@@ -86,6 +87,16 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     
+    /* AI Suggestions card */
+    .ai-suggestions-card {
+        background: linear-gradient(135deg, #667eea22 0%, #764ba211 100%);
+        border-left: 5px solid #667eea;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -141,7 +152,72 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. Spark Session Setup ---
+# --- 2. Gemini AI Configuration ---
+def configure_gemini():
+    """Configure Gemini API with user's key"""
+    try:
+        # Try to get API key from Streamlit secrets (recommended for deployment)
+        if "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
+        # Fallback to environment variable
+        elif "GEMINI_API_KEY" in os.environ:
+            api_key = os.environ["GEMINI_API_KEY"]
+        else:
+            api_key = None
+        
+        if api_key:
+            genai.configure(api_key=api_key)
+            return True
+        return False
+    except Exception as e:
+        st.error(f"Error configuring Gemini: {e}")
+        return False
+
+def get_ai_suggestions(patient_data, risk_level, risk_percentage, bmi, bmi_category):
+    """Generate personalized health suggestions using Gemini AI"""
+    try:
+        model = genai.GenerativeModel('gemini-pro')
+        
+        prompt = f"""
+        You are a healthcare AI assistant. Based on the following patient data from a heart disease prediction model, provide personalized, actionable health suggestions.
+
+        Patient Profile:
+        - Age Group: {patient_data['age_group']}
+        - Sex: {patient_data['sex']}
+        - BMI: {bmi:.1f} ({bmi_category})
+        - Risk Level: {risk_level}
+        - Risk Probability: {risk_percentage:.1f}%
+        
+        Medical History:
+        - High Blood Pressure: {patient_data['high_bp']}
+        - High Cholesterol: {patient_data['high_chol']}
+        - Diabetes: {patient_data['diabetes']}
+        - Stroke History: {patient_data['stroke']}
+        - Smoking: {patient_data['smoking']}
+        
+        Lifestyle:
+        - Physical Activity: {patient_data['physical_activity']}
+        - Difficulty Walking: {patient_data['diff_walk']}
+        - General Health: {patient_data['gen_health']}
+        - Days Physical Health Bad: {patient_data['phys_days']}
+        - Days Mental Health Bad: {patient_data['ment_days']}
+
+        Provide 5-7 specific, actionable suggestions organized by category:
+        1. Medical Follow-up
+        2. Diet & Nutrition
+        3. Exercise & Physical Activity
+        4. Lifestyle Modifications
+        5. Mental Health & Stress Management
+
+        Keep suggestions practical, evidence-based, and empathetic. Format with clear sections and bullet points.
+        """
+        
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Unable to generate AI suggestions: {str(e)}"
+
+# --- 3. Spark Session Setup ---
 @st.cache_resource
 def get_spark_session():
     """Creates and caches the Spark Session"""
@@ -153,7 +229,7 @@ def get_spark_session():
 
 spark = get_spark_session()
 
-# --- 3. Model Loading ---
+# --- 4. Model Loading ---
 @st.cache_resource
 def load_model(_spark):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -170,7 +246,7 @@ def load_model(_spark):
 
 model = load_model(spark)
 
-# --- 4. Mappings ---
+# --- 5. Mappings ---
 age_map = {
     "18-24": 1, "25-29": 2, "30-34": 3, "35-39": 4, "40-44": 5,
     "45-49": 6, "50-54": 7, "55-59": 8, "60-64": 9, "65-69": 10,
@@ -206,7 +282,7 @@ def assess_risk_level(probability, prediction):
     else:
         return "LOW RISK", "🟢", "#4caf50", risk_prob
 
-# --- 5. Sidebar Information ---
+# --- 6. Sidebar Information ---
 with st.sidebar:
     st.markdown("## 📊 About This Tool")
     st.markdown("""
@@ -224,6 +300,26 @@ with st.sidebar:
         st.success("✅ Model Loaded Successfully")
     else:
         st.error("❌ Model Not Loaded")
+    
+    # Gemini AI Status
+    st.markdown("---")
+    st.markdown("### 🤖 AI Assistant Status")
+    if configure_gemini():
+        st.success("✅ Gemini AI Connected")
+    else:
+        st.warning("⚠️ Gemini AI Not Configured")
+        with st.expander("ℹ️ How to Configure Gemini API"):
+            st.markdown("""
+            **Option 1: Streamlit Secrets (Recommended for Streamlit Cloud)**
+            1. Create `.streamlit/secrets.toml` in your project root
+            2. Add: `GEMINI_API_KEY = "your-api-key-here"`
+            
+            **Option 2: Environment Variable (Local)**
+            1. Set environment variable: `export GEMINI_API_KEY="your-api-key-here"`
+            
+            **Get your API key:**
+            Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+            """)
     
     st.markdown("---")
     st.markdown("### 📈 Risk Categories")
@@ -243,15 +339,15 @@ with st.sidebar:
     Use the **☀️/🌙 icon** in the top-right corner to toggle between light and dark themes.
     """)
 
-# --- 6. Main Header ---
+# --- 7. Main Header ---
 st.markdown("""
 <div class="custom-header">
     <h1>❤️ Heart Disease Risk Prediction System</h1>
-    <p>Advanced ML-powered health risk assessment tool</p>
+    <p>Advanced ML-powered health risk assessment tool with AI-generated suggestions</p>
 </div>
 """, unsafe_allow_html=True)
 
-# --- 7. User Interface ---
+# --- 8. User Interface ---
 with st.form("prediction_form"):
     st.markdown("### 📝 Patient Information")
     
@@ -290,7 +386,7 @@ with st.form("prediction_form"):
     st.markdown("---")
     submit_btn = st.form_submit_button("🔍 Run Prediction", type="primary", use_container_width=True)
 
-# --- 8. Prediction Logic ---
+# --- 9. Prediction Logic ---
 if submit_btn and model:
     # Calculate BMI
     height_m = height_cm / 100
@@ -441,7 +537,49 @@ if submit_btn and model:
             for rec in recommendations:
                 st.markdown(f"- {rec}")
         
+        # --- NEW: AI-Generated Personalized Suggestions ---
+        st.markdown("---")
+        st.markdown("## 🤖 AI-Powered Personalized Health Suggestions")
+        
+        if configure_gemini():
+            with st.spinner("🧠 Generating personalized suggestions using AI..."):
+                patient_profile = {
+                    'age_group': age_input,
+                    'sex': sex_input,
+                    'high_bp': bp_input,
+                    'high_chol': chol_input,
+                    'diabetes': diab_input,
+                    'stroke': stroke_input,
+                    'smoking': smoke_input,
+                    'physical_activity': phys_act,
+                    'diff_walk': walk_input,
+                    'gen_health': gen_hlth,
+                    'phys_days': phys_days,
+                    'ment_days': ment_days
+                }
+                
+                ai_suggestions = get_ai_suggestions(
+                    patient_profile, 
+                    risk_level, 
+                    risk_percentage, 
+                    bmi, 
+                    bmi_category
+                )
+                
+                st.markdown(f"""
+                <div class="ai-suggestions-card">
+                    <h3>🎯 Your Personalized Health Plan</h3>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(ai_suggestions)
+                
+                st.info("💡 **Note**: These AI-generated suggestions are personalized based on your health profile. Always consult with healthcare professionals before making significant health changes.")
+        else:
+            st.warning("⚠️ **Gemini AI not configured.** To receive AI-powered personalized suggestions, please configure your Gemini API key. See the sidebar for instructions.")
+        
         # Detailed probability breakdown
+        st.markdown("---")
         with st.expander("📈 View Detailed Probability Breakdown"):
             prob_col1, prob_col2 = st.columns(2)
             
@@ -471,7 +609,7 @@ elif submit_btn and not model:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #666; padding: 2rem;">
-    <p>Built with ❤️ using Streamlit and Apache Spark ML</p>
+    <p>Built with ❤️ using Streamlit, Apache Spark ML, and Google Gemini AI</p>
     <p><small>© 2024 Heart Disease Prediction System | For Educational Purposes</small></p>
 </div>
 """, unsafe_allow_html=True)
