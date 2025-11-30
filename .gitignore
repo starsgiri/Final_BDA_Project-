@@ -6,3 +6,10 @@ __pycache__/
 model_codes/Heart_Disease_Model/
 web-apps/venv/
 web-apps/ui_env/
+
+# Streamlit secrets (contains API keys)
+.streamlit/secrets.toml
+
+# Environment files
+.env
+*.env

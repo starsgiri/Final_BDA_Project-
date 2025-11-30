@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from pyspark.ml import PipelineModel
 import os
 import time
-import google.generativeai as genai
+from google import genai
 
 # --- 1. Page Configuration ---
 st.set_page_config(
@@ -166,7 +166,7 @@ def configure_gemini():
             api_key = None
         
         if api_key:
-            genai.configure(api_key=api_key)
+            os.environ["GEMINI_API_KEY"] = api_key
             return True
         return False
     except Exception as e:
@@ -176,7 +176,8 @@ def configure_gemini():
 def get_ai_suggestions(patient_data, risk_level, risk_percentage, bmi, bmi_category):
     """Generate personalized health suggestions using Gemini AI"""
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        # Create the Gemini client (gets API key from environment variable)
+        client = genai.Client()
         
         prompt = f"""
         You are a healthcare AI assistant. Based on the following patient data from a heart disease prediction model, provide personalized, actionable health suggestions.
@@ -212,7 +213,10 @@ def get_ai_suggestions(patient_data, risk_level, risk_percentage, bmi, bmi_categ
         Keep suggestions practical, evidence-based, and empathetic. Format with clear sections and bullet points.
         """
         
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='models/gemini-2.5-flash',
+            contents=prompt
+        )
         return response.text
     except Exception as e:
         return f"Unable to generate AI suggestions: {str(e)}"
