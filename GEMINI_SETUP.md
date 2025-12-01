@@ -17,7 +17,7 @@ Both Streamlit apps (`app.py` and `Streamlet_app1.py`) use Google's Gemini AI to
 1. Open the file: `.streamlit/secrets.toml`
 2. Replace `your-gemini-api-key-here` with your actual API key:
    ```toml
-   GEMINI_API_KEY = "AIzaSyBljt2iRev186_7a21AFeY9XJskLXM17a0"
+   GEMINI_API_KEY = 
    ```
 3. Save the file
 4. Restart your Streamlit app
